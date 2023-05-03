@@ -1,0 +1,1064 @@
+<?php
+global $bp_options, $cat_template, $kategoriH1, $kategoriCount, $meta, $category_type, $renkAyarlar, $wpdb;
+
+$renkAyarlar['tHeaderRenk'] = $meta['kategoriRenk']['tHeaderRenk'];
+$renkAyarlar['tGenelHover'] = $meta['kategoriRenk']['tGenelHover'];
+
+$category_ids = kategori_listele(get_the_ID());
+if ($category_ids[1] == $category_ids[0]) {
+    $category_ids[1] = get_category($category_ids[0])->parent;
+}
+$main_cat = $category_ids[1];
+
+$category_id = $main_cat;
+
+
+$child = get_category($category_id);
+
+$meta = get_term_meta($category_id, 'category_options', true);
+if ($meta['kategoriSabit']) {
+    $category_type = $meta['kategoriTemplateSabit'];
+} else {
+    $category_type = "";
+}
+
+$renkAyarlar['tHeaderRenk'] = $meta['kategoriRenk']['tHeaderRenk'];
+$renkAyarlar['tGenelHover'] = $meta['kategoriRenk']['tGenelHover'];
+
+if ($meta['fotoGaleriSwitch']) {
+    get_template_part("single-galeri");
+    exit();
+}
+
+get_header();
+
+$post_id = get_the_ID();
+$post_author_id = get_post_field('post_author', $post_id);
+
+setPostViews($post_id);
+$total_like = $wpdb->get_var("SELECT COUNT(*) FROM ta_like WHERE post_id = $post_id");
+
+$videoHaber = get_post_meta($post_id, "bh_haber_video", true);
+if (empty($videoHaber)) {
+    $viewText = "okunma";
+} else {
+    $viewText = "izlenme";
+}
+?>
+
+<?php if ($meta['altKategori'] == 1) {
+    $term = get_queried_object();
+
+    $children = get_terms("category", array(
+        'parent' => $category_id,
+        'hide_empty' => false
+    ));
+
+    if ($children || count($meta['altKategoriPrepend'])) {
+        ?>
+        <div class="alt-cat">
+
+            <ul>
+
+                <?php foreach ($meta['altKategoriPrepend'] as $item => $data) { ?>
+                    <li><a href="<?= $data['url'] ?>"><?= $data['baslik'] ?></a></li>
+                <?php } ?>
+
+                <?php foreach ($children as $subcat) : ?>
+                    <li><a href="<?= esc_url(get_term_link($subcat, $subcat->taxonomy)) ?>"><?= $subcat->name ?></a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php
+    }
+} ?>
+<style>
+}
+    .popularNewsBox {
+        padding-top: 10px !important;
+    }
+
+    .sc-fively-1 {
+        margin: 10px 0;
+    }
+
+    .mobileSearch-flex input {
+
+        padding-top: 10px;
+    }
+
+    .inner-wrapper-sticky {
+        padding: 0 !important;
+    }
+
+    body {
+        padding-right: 0 !important;
+    }
+
+    .inner-wrapper-sticky > div {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 20px 10px 0;
+    }
+
+    .inner-wrapper-sticky > div:first-child {
+        padding-top: 12px;
+    }
+
+    .bestReadBox > div ul li a img {
+        left: 0;
+    }
+
+    .bestReadBox > div ul li a {
+        padding-left: 138px;
+        padding-right: 10px;
+    }
+
+    .bestReadBox > div > div:last-child {
+        padding: 16px 20px 12px 20px !important;
+    }
+
+    .ads {
+        margin-bottom: 0 !important;
+        position: relative;
+    }
+
+    #cis-load-img {
+        width: 75px !important;
+        display: block;
+        margin: 15px auto;
+    }
+
+    @media only screen and (max-width: 1024px) {
+        .ads {
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        #newsRead .haberSingle .top {
+            width: 100%;
+        }
+
+        .haberSingle:after {
+            width: 100% !important;
+            margin-bottom: 10px;
+        }
+
+        #newsRead .bottom .left .detail .relatedContent a strong {
+            width: 100% !important;
+        }
+
+        #newsRead .bottom .left .sixNews .row > div {
+            padding: 0 6px 6px 6px !important;
+        }
+
+        #newsRead .bottom .left .sixNews .row:nth-child(2n) {
+            padding-right: 6px !important;
+            padding-left: 6px !important;
+        }
+
+        .detail img {
+            height: inherit !important;
+        }
+
+        .size-full {
+            max-height: unset !important;
+        }
+
+    <?php if( ! empty( $videoHaber ) ) { ?>
+        .infinityDiv, .vidgal time, .news-abone.vidgal2 {
+            display: none !important;
+        }
+
+    <?php } ?>
+    }
+
+    <?php if( ! empty( $videoHaber ) ) { ?>
+    .infinityDiv, .vidgal time, .news-abone.vidgal2 {
+        display: none !important;
+    }
+
+    .sc-options {
+        margin-top: 0;
+    }
+
+    #newsRead .bottom .left {
+        padding-top: 0;
+    }
+
+    #newsRead .bottom .right > div > div:first-child {
+        padding-top: 0;
+    }
+
+    <?php } ?>
+    @media screen and (max-width: 782px) {
+        #newsRead .top h1 {
+            font-size: 26px;
+            line-height: 32px;
+        }
+
+        .alt-cat {
+            display: none;
+        }
+
+        .ads {
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+    }
+
+</style>
+
+
+<?php if (have_posts()) : while (have_posts()) :
+the_post();
+if (!empty($videoHaber)): ?>
+    <div id="videoPostHead">
+        <div class="videoPostHead">
+            <div class="container">
+
+
+                <div class="singleBigTitle vidgal">
+                    <h1><?php the_title(); ?></h1>
+
+                    <?php if ($bp_options['updateDateVisible'] == 1): ?>
+                        <time datetime="<?= get_the_date("Y-m-d") ?>"><i
+                                    class="icon-clock"></i>Güncelleme: <?= get_the_modified_date() ?> <?= get_the_modified_date("H:i") ?>
+                        </time>
+                    <?php endif; ?>
+                    <?php if (!empty($bp_options['googleNewsLink'])): ?>
+                        <div class="news-abone vidgal2">
+                            <span>ABONE OL</span>
+                            <a href="<?= $bp_options['googleNewsLink'] ?>">
+                                <div class="news-abone-logo">
+                                    <img src="<?php bloginfo("template_directory"); ?>/img/icons/gg.svg"
+                                         alt="google news">
+                                    News
+                                </div>
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="contentArea">
+                    <div class="videoIframe floatLeft">
+                        <?php
+                        if ($bp_options['videoLink'] == 1) {
+                            ?>
+                        <iframe width="300" height="720" src="<?= $videoHaber ?>" frameborder="0"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen></iframe><?php
+                        } else {
+                            echo $videoHaber;
+                        }
+
+
+                        ?>
+                    </div>
+                    <div class="rightPosts floatRight">
+                        <span class="title">Benzer Videolar</span>
+                        <ul class="wrapper">
+                            <?php $categories = get_the_category($post->ID);
+                            if ($categories) {
+                                $category_ids = array();
+                                foreach ($categories as $individual_category) $category_ids[] = $individual_category->term_id;
+
+                                $args = array(
+                                    'category__in' => $category_ids,
+                                    'post__not_in' => array($post->ID),
+                                    'showposts' => 6,
+                                    'caller_get_posts' => 1,
+                                    'meta_query' => array(
+                                        array(
+                                            'key' => 'bh_haber_video',
+                                            'value' => array(''),
+                                            'compare' => 'NOT IN'
+                                        )
+                                    )
+                                );
+
+                                $my_query = new wp_query($args);
+                                if ($my_query->have_posts()) {
+                                    while ($my_query->have_posts()) {
+                                        $my_query->the_post();
+                                        $similarPostId = get_the_ID();
+
+                                        $isVideo = get_post_meta($similarPostId, "bb_video_haber", true);
+
+                                        $categorySimilar = kategori_listele($similarPostId);
+
+                                        ?>
+
+                                        <li><a href="<?php the_permalink() ?>">
+                                                <div class="thumb">
+                                                    <?php the_post_thumbnail('economy_thumb', array("alt" => get_the_title())); ?>
+                                                    <i class="videoIcon center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14.001"
+                                                             height="18.006" viewBox="0 0 14.001 18.006">
+                                                            <path id="Play_Icon" data-name="Play Icon"
+                                                                  d="M771.043,723.537l-10.941-7.2c-1.228-.8-2.1-.155-2.1,1.435V732.22c0,1.587.876,2.235,2.1,1.431l11-7.2A1.611,1.611,0,0,0,771.043,723.537Z"
+                                                                  transform="translate(-757.997 -715.99)"
+                                                                  fill="#fff"></path>
+                                                        </svg>
+                                                    </i>
+                                                </div>
+                                                <span><?php the_title(); ?></span>
+                                            </a>
+                                        </li>
+
+                                    <?php }
+                                }
+                                wp_reset_query();
+                            } ?>
+
+
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+<div id="newsRead" class="container <?php if (empty($videoHaber)): ?> lcont<?php endif; ?>">
+    <?php
+    if (empty($videoHaber)) {
+        if (!empty($bp_options['headerAltReklami'])) { ?>
+            <div class="ads des-g" style="margin-top:10px;margin-bottom:20px;">
+                <?= $bp_options['headerAltReklami'] ?>
+            </div>
+        <?php } ?>
+
+        <?php if (!empty($bp_options['headerMobilTopAltiReklam'])) { ?>
+            <div class="ads mobileg-g" style="margin-bottom:20px;">
+                <?= $bp_options['headerMobilTopAltiReklam'] ?>
+            </div>
+        <?php }
+    }
+    ?>
+    <div class="lholder container">
+
+
+        <?php
+        if (empty($videoHaber)) {
+            if (!empty($bp_options['solReklam'])) {
+                ?>
+                <div class="leftr">
+                    <?= $bp_options['solReklam'] ?>
+                </div>
+            <?php } ?>
+            <?php
+            if (!empty($bp_options['solReklam'])) {
+                ?>
+                <div class="righttr">
+                    <?= $bp_options['sagReklam'] ?>
+                </div>
+            <?php }
+        }
+        ?>
+    </div>
+
+    <div class="des-g" style="margin-top:20px;">
+        <?php echo $bp_options['tamSingleReklam']; ?>
+    </div>
+    <?php if (!empty($videoHaber)): ?>
+    <div class="lcont"> <?php endif; ?>
+
+        <?php if (!empty($videoHaber)): ?>
+            <div class="lholder container">
+                <?php
+                if (!empty($bp_options['solReklam'])) {
+                    ?>
+                    <div class="leftr">
+                        <?= $bp_options['solReklam'] ?>
+                    </div>
+                <?php } ?>
+                <?php
+                if (!empty($bp_options['solReklam'])) {
+                    ?>
+                    <div class="righttr">
+                        <?= $bp_options['sagReklam'] ?>
+                    </div>
+                <?php } ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="haberSingle">
+            <?php
+            if ($bp_options['infinityScroll'] == true):
+                $prev_id = get_previous_post(true); ?>
+                <a href="<?= get_permalink($prev_id) ?>" rel="prev" title="<?= get_the_title($prev_id) ?>"
+                   image="<?= get_the_post_thumbnail_url($prev_id, 'ta_tiny') ?>"></a>
+            <?php endif; ?>
+
+            <div class="top">
+
+                <div class="sticky-bread" style="">
+                    <div class="container sticky-container">
+                        <div class="flex-between">
+                            <div class="sb-left">
+                                <a href="<?= home_url() ?>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15.001" height="10"
+                                         viewBox="0 0 14.001 10">
+                                        <path d="M737,165H726.364l2.643,2.751-1.2,1.249-3.6-3.75h0L723,164l4.806-5,1.2,1.25L726.364,163H737Z"
+                                              transform="translate(-722.999 -158.999)" fill="#DB2027"/>
+                                    </svg>
+                                </a>
+                                <a href="<?= home_url() ?>">Anasayfa</a> <b>/</b>
+
+                                <?php if (@$category_ids[0]): ?>
+                                    <a href="<?= get_category_link($category_ids[0]) ?>"><?= get_cat_name($category_ids[0]) ?></a>
+                                    <b>/</b><?php
+                                else:
+                                    ?><a
+                                    href="<?= get_category_link($category_ids[1]) ?>"><?= get_cat_name($category_ids[1]) ?></a>
+                                    <b>/</b><?php
+                                endif; ?>
+                                <span><a href="<?= get_the_permalink() ?>"><?php the_title(); ?></a></span>
+                            </div>
+                            <div class="header-bottom-right-options">
+                                <?php get_template_part("inc/template/header/right"); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php if (empty($videoHaber)) { ?>
+                    <div class="capmobile">
+                        <?php
+                        if (!empty($videoHaber)) {
+                            if ($bp_options['videoOneCikanGorselGosterme'] != 1) {
+                                the_post_thumbnail('ta_single', array("alt" => get_the_title()));
+                            }
+                        } else if ($bp_options['oneCikanGorselGosterme'] != 1) {
+                            the_post_thumbnail('ta_single', array("alt" => get_the_title()));
+                        }
+                        ?>
+                    </div>
+                    <div class="sitemapflex">
+                        <ul class="siteMap">
+                            <li><i class="icon-angle-arrow-right"></i><a
+                                        href="<?= home_url("/") ?>"><?php bloginfo("name") ?></a></li>
+                            <li><i class="icon-angle-arrow-right"></i><a
+                                        href="<?= get_category_link($category_ids[1]) ?>"><?= get_cat_name($category_ids[1]) ?></a>
+                            </li>
+                            <?php if (@$category_ids[0]): ?>
+                                <li><i class="icon-angle-arrow-right"></i><a
+                                            href="<?= get_category_link($category_ids[0]) ?>"><?= get_cat_name($category_ids[0]) ?></a>
+                                </li>
+                            <?php endif; ?>
+                            <li><strong><?php the_title(); ?></strong></li>
+                        </ul>
+
+
+                        <time datetime="<?= get_the_modified_date("Y-m-d") ?>">
+                            
+                            <?php if (($bp_options['viewsVisible'] == 1) && ($bp_options['updateDateVisible'] == 1)) { ?>
+                                <u class="nnmbt">|</u>
+                            <?php } ?>
+
+
+                            <?php if ($bp_options['updateDateVisible'] == 1): ?>
+								<b> Yazılma: <?= get_the_date() ?> <?= get_the_date("H:i") ?></b><br>
+                                <b> Güncelleme: <?= get_the_modified_date() ?> <?= get_the_modified_date("H:i") ?></b>
+                            <?php endif; ?>
+                        </time>
+                    </div>
+                    <?php if ($bp_options['viewsMobileVisible'] == 1): ?>
+                       
+                    <?php endif; ?>
+                    <h1><?php the_title(); ?></h1>
+
+                    <?php if (!empty(get_post_meta($post_id, "bh_haber_ozet", true))): ?>
+                        <h2><?= get_post_meta($post_id, "bh_haber_ozet", true) ?></h2>
+                    <?php endif; ?>
+                    <div class="abonemobile">
+                        <?php if (!empty($bp_options['googleNewsLink'])): ?>
+                            <div class="news-abone">
+                                <span>ABONE OL</span>
+                                <a href="<?= $bp_options['googleNewsLink'] ?>">
+                                    <div class="news-abone-logo">
+                                        <img src="<?php bloginfo('template_directory'); ?>/img/icons/gg.svg"
+                                             alt="google news">
+                                        News
+                                    </div>
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                        <span><?= get_the_modified_date() ?> <?= get_the_modified_date("H:i") ?></span>
+                    </div>
+                <?php } ?>
+            </div>
+            <?php $post_tags = get_the_tags();
+            if ($post_tags) {
+                foreach ($post_tags as $tag) {
+                    $tags_news[] = $tag;
+                }
+            }
+            ?>
+            <script type="application/ld+json">
+    {
+    "@context": "http://schema.org",
+    "@type": "NewsArticle",
+    "inLanguage": "tr-TR",
+    "articleSection": "<?= get_cat_name($category_ids[1]) ?>",
+    "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "<?php the_permalink(); ?>"
+    },
+    "headline": "<?php the_title(); ?>",
+    "alternativeHeadline": "",
+    "keywords": "<?php echo @implode(",", "$tags_news") ?>",
+    "image": {
+    "@type": "ImageObject",
+    "url": "<?= get_the_post_thumbnail_url() ?>",
+    "width": "840",
+    "height": "478"
+    },
+    "dateCreated": "<?= get_the_date("Y-m-d") ?>T<?= get_the_date("H:i:s") ?>.822Z",
+    "datePublished": "<?= get_the_date("Y-m-d") ?>T<?= get_the_date("H:i:s") ?>.822Z",
+    "dateModified": "<?= get_the_date("Y-m-d") ?>T<?= get_the_date("H:i:s") ?>.822Z",
+    "description": "",
+    "wordCount": "<?= prefix_wcount() ?>",
+    "author": {
+    "@type": "Thing",
+    "name": "<?php the_author() ?>"
+    },
+    "publisher": {
+    "@type": "Organization",
+    "name": "<?php bloginfo("name") ?>",
+    "logo": {
+    "@type": "ImageObject",
+    "url": "<?= $bp_options['desktop_logo'] ?>",
+    "width": 150,
+    "height": 50
+    }
+    }
+    }
+
+
+            </script>
+            <script type="application/ld+json">
+    {
+    "@context": "http://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+
+    "@type": "ListItem",
+    "position": 1,
+    "item": {
+    "@id": "<?= home_url("/") ?>",
+    "name": "<?php bloginfo("name") ?>"
+    }
+    },{
+    "@type": "ListItem",
+    "position": 2,
+    "item": {
+    "@id": "<?= get_category_link($category_ids[1]) ?>",
+    "name": "<?= htmlentities(get_cat_name($category_ids[1])) ?>"
+    }
+    }<?php if (@$category_ids[0]): ?>,{
+    "@type": "ListItem",
+    "position": 3,
+    "item": {
+    "@id": "<?= get_category_link($category_ids[0]) ?>",
+    "name": "<?= htmlentities(get_cat_name($category_ids[0])) ?>"
+    }
+  },{
+  "@type": "ListItem",
+  "position": 4,
+  "item": {
+  "@id": "<?php the_permalink() ?>",
+  "name": "<?= htmlentities(get_the_title()) ?>"
+  }
+  }
+    <?php else:
+                    ?>
+      ,{
+      "@type": "ListItem",
+      "position": 3,
+      "item": {
+      "@id": "<?php the_permalink() ?>",
+      "name": "<?= htmlentities(get_the_title()) ?>"
+      }
+      }
+      <?php
+
+                endif; ?>
+  ]
+    }
+
+
+            </script>
+
+            <div class="bottom" <?php if (!empty($videoHaber)){ ?>style="margin-top: 10px"<?php } ?>>
+                <div class="left">
+                    <div class="detail">
+                        <div class="cap">
+
+                            <?php
+                            if (!empty($videoHaber)) {
+                                if ($bp_options['videoOneCikanGorselGosterme'] != 1) {
+                                    the_post_thumbnail('ta_single', array("alt" => get_the_title()));
+                                }
+                            } else if ($bp_options['oneCikanGorselGosterme'] != 1) {
+                                the_post_thumbnail('ta_single', array("alt" => get_the_title()));
+                            }
+                            ?>
+
+                            <div class="sc-options <?php if ($bp_options['mobilSingleAltBar'] != 1): ?> des-g <?php endif; ?>">
+                                <div class="flex-between">
+                                    <div class="sc-options-left">
+                                        <a href="<?= get_author_posts_url($post_author_id); ?>" class="sc-options-user">
+                                            <?php if (!empty(get_user_meta($post_author_id, "profil_pic", true))) { ?>
+                                               <img src="<?= TemadamHelper::getAvatarUrl(get_the_author_meta('ID')); ?>">
+                                            <?php } else { ?>
+                                                <img src="<?php bloginfo("template_directory") ?>/img/icons/user.png">
+                                            <?php } ?>
+                                        </a>
+                                        <div style="font-weight:bold">Editör: <?php echo get_the_author_meta('display_name', $post_author_id); ?></div>
+                                        
+                                        
+                                    </div>
+                                    <div class="sc-options-right" style="margin:0px;padding:0px; ">
+                                        <?php if (!empty($bp_options['googleNewsLink'])): ?>
+                                            <div class="news-abone" style="padding-right:6px">
+                                                <span>ABONE OL</span>
+                                                <a href="<?= $bp_options['googleNewsLink'] ?>">
+                                                    <div class="news-abone-logo">
+                                                        <img src="<?php bloginfo('template_directory'); ?>/img/icons/gg.svg"
+                                                             alt="google news">
+                                                        News
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div onclick="like(<?= $post_id ?>)" class="options-icons">
+                                            <div class="icon-border">
+                                                <i class="icon-like2"></i>
+                                                <span class="icon-border-count"
+                                                      id="totalLike_<?= get_the_ID(); ?>"><?= TemadamHelper::getTotalLike(get_the_ID()) ?></span>
+                                            </div>
+                                            
+                                        </div>
+                                        <div class="options-icons iconcom">
+                                            <a href="javascript:void(0);">
+                                                <div class="icon-border">
+                                                    <i class="icon-comments2"></i>
+                                                    <span class="icon-border-count"><?= get_comments_number(); ?><span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="options-icons iconfav">
+                                            <?php if (is_user_logged_in()) {
+                                                echo get_simple_likes_button($post_id);
+                                            } else {
+                                                ?><a href="javascript:;"
+                                                     onclick="danger_alert('Favorilere eklemek için üye girişi yapmalısınız.')">
+                                                    <div class="icon-border"><i class="icon-favori2"></i></div>
+                                                </a> <?php
+                                            }
+                                            ?>
+                                        </div>
+
+
+                                        <div class="options-icons">
+                                            <a href="https://twitter.com/intent/tweet/?url=<?= get_the_permalink(); ?>"
+                                               target="_blank">
+                                                <div class="icon-border twitter">
+                                                    <i></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="options-icons">
+                                            <a href="https://www.facebook.com/sharer/sharer.php?u=<?= get_the_permalink(); ?>"
+                                               target="_blank">
+                                                <div class="icon-border facebook">
+                                                    <i></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="options-icons">
+                                            <a href="https://api.whatsapp.com/send?text=<?= get_the_permalink(); ?>"
+                                               target="_blank">
+                                                <div class="icon-border whatsapp">
+                                                    <i></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="options-icons">
+                                            <a href="https://pinterest.com/pin/create/button/?url=<?= get_the_permalink(); ?>"
+                                               target="_blank">
+                                                <div class="icon-border pinterest icon-pinterest">
+                                                    <i></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+						<div class="ads des-g" style="margin-bottom:12px!important">
+							<img src="resim-url" alt="resim açıklama" />
+								</div>
+                        <?php if (!empty($bp_options['oneCikanGorselAltiReklam'])) { ?>
+                            <div class="ads des-g" style="margin-bottom:12px!important">
+                                <?= $bp_options['oneCikanGorselAltiReklam'] ?>
+                            </div>
+                        <?php } ?>
+
+                        <?php if (!empty($bp_options['haberSolReklam'])) { ?>
+                            <div class="ads des-g"
+                                 style="display:inline;width:auto;float:left;margin: 8px 12px 8px 0!important;">
+                                <?= $bp_options['haberSolReklam'] ?>
+                            </div>
+                        <?php } ?>
+
+                        <script>
+
+
+                            /*------------------------------------------------
+                             * Shrink Header
+                             ------------------------------------------------*/
+
+
+                            $(document).on('click', function (e) {
+                                if ($(e.target).closest(".icon-share").length === 0) {
+                                    $(".shareArea").removeClass('active');
+                                }
+
+                                if ($(e.target).closest(".dotsAreaContent").length === 0 && $(e.target).closest(".icon-dots").length === 0) {
+                                    $(".dotsAreaContent").css('visibility', "hidden");
+                                }
+                            });
+
+
+                            $(".a-plus").click(function () {
+                                var sBox = $(".a-plus-inp").attr("data-sBox");
+                                var status = $(".a-plus-inp").attr("data-status");
+
+                                var currentFont = parseInt($(".a-plus-inp").val());
+                                if (currentFont == 20) {
+                                    var status = "down";
+                                    var sBox = true;
+                                } else if (currentFont == 14) {
+                                    var status = "up";
+                                    var sBox = true;
+                                }
+
+                                if (status == "down") {
+                                    currentFont = parseInt(currentFont - 1);
+                                    if (currentFont == 14) {
+                                        var status = "up";
+                                        var sBox = true;
+                                    }
+                                } else if (status == "up") {
+                                    currentFont = parseInt(currentFont + 1);
+                                    if (currentFont == 20) {
+                                        var status = "down";
+                                        var sBox = true;
+                                    }
+                                    $(".a-plus-inp").attr("data-sBox", sBox);
+                                    $(".a-plus-inp").attr("data-status", status);
+                                }
+
+
+                                $(".a-plus-inp").val(currentFont);
+
+                                $("#newsRead .bottom .left .detail p").css("font-size", currentFont);
+                            });
+                        </script>
+
+                        <?php if (!empty($bp_options['firstSingleReklamMobil'])) { ?>
+                            <div class="ads mobileg-g">
+                                <?= $bp_options['firstSingleReklamMobil'] ?>
+                            </div>
+                        <?php } ?>
+
+                        <?php
+                        $content = apply_filters('the_content', get_the_content());
+
+                        $content = explode("</p>", $content);
+
+
+                        $contentCount = count($content);
+                        echo galleryMeta($post_id, $content[0]) . '</p>';
+
+                        if (!empty($bp_options['firstSingleReklamMobil'])) { ?>
+                            <div class="ads mobileg-g">
+                                <?= $bp_options['firstPSingleReklamMobil'] ?>
+                            </div>
+                        <?php }
+
+                        echo galleryMeta($post_id, $content[1]) . '</p>';
+                        echo galleryMeta($post_id, $content[2]) . '</p>';
+                        echo galleryMeta($post_id, $content[3]) . '</p>';
+
+                        if (!empty($bp_options['firstSingleReklam']) && !empty($content[4])):
+                            ?>
+                            <div class="des-g"><?php
+                            echo $bp_options['firstSingleReklam'];
+                            ?></div><?php
+                        endif;
+
+                        echo galleryMeta($post_id, $content[4]) . '</p>';
+
+                        if (!empty($bp_options['fourthSingleReklamMobil'])) { ?>
+                            <div class="ads mobileg-g">
+                                <?= $bp_options['fourthSingleReklamMobil'] ?>
+                            </div>
+                        <?php }
+
+
+                        unset($content[0]);
+                        unset($content[1]);
+                        unset($content[2]);
+                        unset($content[3]);
+                        unset($content[4]);
+
+                        echo galleryMeta($post_id, $content[5]) . '</p>';
+                        echo galleryMeta($post_id, $content[6]) . '</p>';
+                        echo galleryMeta($post_id, $content[7]) . '</p>';
+                        echo galleryMeta($post_id, $content[8]) . '</p>';
+
+                        unset($content[5]);
+                        unset($content[6]);
+                        unset($content[7]);
+                        unset($content[8]);
+
+                        if (!empty($bp_options['nineSingleReklamMobil']) && !empty($content[9])) { ?>
+                            <div class="ads mobileg-g">
+                                <?= $bp_options['nineSingleReklamMobil'] ?>
+                            </div>
+                        <?php }
+
+                        for ($i = 8; $i < 14; $i++):
+                            echo galleryMeta($post_id, $content[$i]) . "</p>";
+                            unset($content[$i]);
+                        endfor;
+
+                        if (!empty($bp_options['ortaSingleReklam']) && !empty($content[15])) {
+                            ?>
+                            <div class="des-g"><?php
+                            echo $bp_options['ortaSingleReklam'];
+                            ?></div><?php
+                        }
+
+
+                        echo galleryMeta($post_id, implode("</p>", $content));
+
+                        if (!empty($bp_options['lastSingleReklam'])) {
+                            ?>
+                            <div class="des-g"><?php
+                            echo $bp_options['lastSingleReklam'];
+                            ?></div><?php
+                        }
+
+
+                        ?>
+                    </div>
+
+                    <div class="sc-left-tags">
+                        <ul>
+                            <?php $post_tags = get_the_tags();
+                            if ($post_tags) {
+                                foreach ($post_tags as $tag) {
+                                    echo '<li><a href="' . get_tag_link($tag->term_id) . '">' . $tag->name . '</a></li>';
+                                }
+                            }
+                            ?>
+                        </ul>
+                    </div>
+
+                    <?php if (!empty($bp_options['lastSingleReklamMobil'])) { ?>
+                        <div class="ads mobileg-g">
+                            <?= $bp_options['lastSingleReklamMobil'] ?>
+                        </div>
+                    <?php } ?>
+
+                    <?php if ($bp_options['benzerIceriklerPasif'] != true) : ?>
+                        <div class="sixNews">
+
+                            <div class="row">
+                                <?php $categories = get_the_category($post->ID);
+                                if ($categories) {
+                                    $category_ids = array();
+                                    foreach ($categories as $individual_category) $category_ids[] = $individual_category->term_id;
+
+                                    $args = array(
+                                        'category__in' => $category_ids,
+                                        'post__not_in' => array($post->ID),
+                                        'showposts' => 6,
+                                        'caller_get_posts' => 1
+                                    );
+
+                                    $my_query = new wp_query($args);
+                                    if ($my_query->have_posts()) {
+                                        while ($my_query->have_posts()) {
+                                            $my_query->the_post();
+                                            $similarPostId = get_the_ID();
+
+                                            $isVideo = get_post_meta($similarPostId, "bb_video_haber", true);
+
+                                            $categorySimilar = kategori_listele($similarPostId);
+                                            ?>
+                                            <div>
+                                                <a href="<?php the_permalink() ?>" class="newsBox">
+                                          <span>
+                                              <img src="<?= get_the_post_thumbnail_url($similarPostId, 'ta_tiny', array("alt" => get_the_title())); ?>"/>
+                                          </span>
+                                                    <strong>
+                                                        <span><?php the_title(); ?></span>
+                                                    </strong>
+                                                </a>
+                                            </div>
+
+                                        <?php }
+                                    }
+                                    wp_reset_query();
+                                } ?>
+
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php comments_template(); ?>
+
+
+                </div>
+
+                <div class="right mobile-gizle">
+
+
+                    <div>
+                        <?php dynamic_sidebar("Tüm Haberler (Sidebar)"); ?>
+                    </div>
+                </div>
+
+            </div>
+            <?php endwhile;
+            endif; ?>
+
+        </div>
+        <?php if (!empty($videoHaber)): ?> </div> <?php endif; ?>
+</div>
+<?php
+if (!empty($videoHaber)) {
+    $bp_options['infinityScroll'] = false;
+}
+
+if ($bp_options['infinityScroll'] == true): ?>
+
+    <script type="text/javascript"
+            src="<?php bloginfo('template_directory'); ?>/js/jquery.clever-infinite-scroll.js"></script>
+    <script>
+        $('#newsRead ').cleverInfiniteScroll({
+            contentsWrapperSelector: '#newsRead',
+            contentSelector: '.haberSingle',
+            nextSelector: 'a[rel="prev"]',
+            loadImage: '<?php bloginfo("template_directory")?>/img/infinityLoad.gif'
+        });
+    </script>
+<?php else : ?>
+    <style>
+        .haberSingle:after {
+            display: none;
+        }
+
+        #newsRead .bottom .left .comments {
+            margin-bottom: 20px;
+        }
+    </style>
+<?php endif; ?>
+
+<script>
+    function like(post_id) {
+        $.post('<?=admin_url("admin-ajax.php")?>', {action: 'post_like', post_id: post_id})
+            .done(function (result) {
+                if (result == "Error") {
+                    danger_alert("Zaten beğenmişsiniz.");
+                } else {
+                    var totalLike = parseInt($("#totalLike_" + post_id).html());
+                    $("#totalLike_" + post_id).html(totalLike + 1);
+                }
+            });
+    }
+
+    $('blockquote').append('<i class="icon-quote"></i>');
+
+</script>
+
+
+<script>
+    function selectAnswer(question_id, answer_id, answer) {
+        var isTrue = $(".qa_status_" + question_id + "_" + answer_id).data("true");
+
+        var answerStatus = $(".answerStatus" + question_id).val();
+
+        if (answerStatus != 1) {
+            $(".qa_status_" + question_id + "_" + answer_id).prop("checked", true);
+            $(".qa_answers_" + question_id).prop("disabled", true);
+            if (isTrue == 1) {
+                $(".qa_status_" + question_id + "_" + answer_id).parent('li').addClass("true");
+                $(".qa_result_" + question_id).show();
+                $(".qa_result_" + question_id).html("<span style='color: green; font-weight: 600;'>Doğru</span>");
+            } else {
+                $(".qa_status_" + question_id + "_" + answer_id).parent('li').addClass("false");
+                $(".qa_result_" + question_id).show();
+                $(".qa_result_" + question_id).html("<span style='color: red; font-weight: 600;'>Yanlış</span>");
+                $(".qa_answers_" + question_id).each(function () {
+                    if ($(this).data("true") == 1) {
+                        $(this).prop("checked", true);
+                        $(this).parent('li').addClass("true");
+                    }
+                });
+
+                $(".qa_answers_" + question_id).prop("disabled", true);
+            }
+        }
+
+        $(".answerStatus" + question_id).val(1);
+        var incorrectStatus = 0;
+        $(".answerHiddenAllData").each(function () {
+            if ($(this).val() == 1) {
+
+            } else {
+                incorrectStatus = 1;
+            }
+
+        });
+
+        console.log(incorrectStatus);
+
+
+        if (incorrectStatus != 1) {
+            var trueCount = 0;
+            var falseCount = 0;
+            $(".qa_result_span span").each(function () {
+                if ($(this).html() == "Yanlış") {
+                    falseCount = falseCount + 1;
+                } else {
+                    trueCount = trueCount + 1;
+                }
+            });
+
+            $(".qa_total_result").html("Sonuç: <span style='color: green;'>" + trueCount + " Doğru </span><span style='color: red;'>" + falseCount + " Yanlış</span>");
+            $(".qa_total_result").show();
+        }
+
+    }
+
+
+    $(".iconcom a").click(function () {
+        $('html, body').animate({
+            scrollTop: $("#respond").offset().top - 100
+        }, 800);
+    });
+
+</script>
+
+
+<?php get_footer(); ?>
